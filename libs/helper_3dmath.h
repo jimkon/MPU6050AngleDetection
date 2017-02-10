@@ -211,6 +211,23 @@ class VectorFloat {
             r.rotate(q);
             return r;
         }
+		
+		//added by jimkon
+		void mult(float f){
+			x *= f;
+			y *= f;
+			z *= f;
+		}
+		
+		void div(float f){
+			mult(1.0/f);
+		}
+		
+		void add(VectorFloat vf){
+			x += vf.x;
+			y += vf.y;
+			z += vf.z;
+		}
 };
 
 #endif /* _HELPER_3DMATH_H_ */
