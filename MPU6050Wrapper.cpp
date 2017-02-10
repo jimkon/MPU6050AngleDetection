@@ -7,17 +7,26 @@ MPU6050Wrapper::MPU6050Wrapper() {
 	setDefaultSettings();
 }
 
-MPU6050 MPU6050Wrapper::getMPUSensor(){
-	return mpu;
+//MPU6050 MPU6050Wrapper::getMPUSensor(){
+//	return mpu;
+//}
+
+void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
+	accel %= 4;
+	gyro  %= 4;
+	
+	mpu.setFullScaleAccelRange(accel);
+	mpu.setFullScaleGyroRange(gyro);
+	
+	accel_div = ACCEL_DIVIDERS[accel];
+	gyro_div = GYRO_DIVIDERS[gyro];
+	
 }
 
 void MPU6050Wrapper::setDefaultSettings() {
-	mpu.setClockSource(MPU6050_CLOCK_PLL_XGYRO);
-    mpu.setFullScaleGyroRange(MPU6050_GYRO_FS_250);
-    mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
+	mpu.setClockSource(mpu.MPU6050_CLOCK_PLL_XGYRO);
+    setRangeSettings(mpu.MPU6050_ACCEL_FS_250, mpu.MPU6050_GYRO_FS_250);
     mpu.setSleepEnabled(false);
-	accel_div = ACCEL_DIVIDERS[0];
-	gyro_div = GYRO_DIVIDERS[0];
 }
 
 bool MPU6050Wrapper::fullTest() {
@@ -25,26 +34,35 @@ bool MPU6050Wrapper::fullTest() {
 }
 
 //loop
-void MPU6050Wrapper::refresh() {
+void MPU6050Wrapper::refresh(float dt) {
 	VectorFloat temp[] = getSensorValues();
 	
 	VectorFloat accel_sensor = temp[0];
 	VectorFloat gyro_sensor = temp[1];
+	
+	//implementing complimentary filter
+	accel_sensor.mult(COMPLIMENTARY_ACCEL);
+	gyro_sensor.mult(COMPLIMENTARY_GYRO);
+	gyro_sensor.add(accel_sensor);
+	
+	gyro_sensor.mult(dt);
+	
+	angle.add(gyro_sensor);
 }
 
-double MPU6050Wrapper::getAngleX() {
-	return gx;
+float MPU6050Wrapper::getAngleX() {
+	return angle.x;
 }
 		
-double MPU6050Wrapper::getAngleY() {
-	return gy;
+float MPU6050Wrapper::getAngleY() {
+	return angle.y;
 }
 		
-double MPU6050Wrapper::getAngleZ() {
-	return gz;
+float MPU6050Wrapper::getAngleZ() {
+	return angle.z;
 }
 
-//temporary implementation
+//temporary implementation. doesn't use FIFO
 VectorFloat* MPU6050Wrapper::getSensorValues(){
 	//sersor values
 	int ax, ay, az;
@@ -52,10 +70,11 @@ VectorFloat* MPU6050Wrapper::getSensorValues(){
 	
 	mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 	
+	VectorFloat accel((float)ax, (float)ay, (float)az);
+	accel.div(accel_div);
 	
-	
-	VectorFloat accel((float)ax/accel_div, (float)ay/accel_div, (float)az/accel_div);
-	VectorFloat gyro((float)gx/gyro_div, (float)gy/gyro_div, (float)gz/gyro_div);
+	VectorFloat gyro((float)gx, (float)gy, (float)gz);
+	gyro.div(gyro_div);
 	
 	VectorFloat res[] = {accel, gyro};
 	return res;

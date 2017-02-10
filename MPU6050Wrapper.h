@@ -7,35 +7,37 @@
 #include "./libs/helper_3dmath.h"
 
 
-const double ACCEL_DIVIDERS[] =	{8192.0,	4096.0,	2048.0,	1024.0};
-const double GYRO_DIVIDERS[] = {131,	65.5,	32.8,	16.4};
+const float ACCEL_DIVIDERS[] =	{16384.0, 8192.0,	4096.0,	2048.0};
+const float GYRO_DIVIDERS[] = {131,	65.5,	32.8,	16.4};
+const float COMPLIMENTARY_ACCEL = 0.02;
+const float COMPLIMENTARY_GYRO = 0.98;
 
 class MPU6050Wrapper {
 	
 	private:
 		MPU6050 mpu;
-		
-		//sersor values
-		int ax, ay, az;
-		int gx, gy, gz;
-	
+		float accel_div;
+		float gyro_div;
+		VectorFloat angle;
 	
 	public:
         MPU6050Wrapper();
 		
-		MPU6050 getMPUSensor();
+		//MPU6050 getMPUSensor();
+		
+		void setRangeSettings(int accel, int gyro);
 		
 		bool fullTest();
 		
 		//bool quickTest();
 		
-		void refresh();
+		void refresh(float dt);
 		
-		double getAngleX();
+		float getAngleX();
 		
-		double getAngleY();
+		float getAngleY();
 		
-		double getAngleZ();
+		float getAngleZ();
 		
 	private:
 		void setDefaultSettings();
