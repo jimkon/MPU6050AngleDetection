@@ -1,15 +1,19 @@
 
-
 #include "MPU6050Wrapper.h"
 
 //setup
 MPU6050Wrapper::MPU6050Wrapper() {
-	setDefaultSettings();
+	
 }
 
 //MPU6050 MPU6050Wrapper::getMPUSensor(){
 //	return mpu;
 //}
+
+void MPU6050Wrapper::init(){
+	setDefaultSettings();
+	setProperOffsets();
+}
 
 void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
 	accel %= 4;
@@ -24,9 +28,33 @@ void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
 }
 
 void MPU6050Wrapper::setDefaultSettings() {
-	mpu.setClockSource(mpu.MPU6050_CLOCK_PLL_XGYRO);
-    setRangeSettings(mpu.MPU6050_ACCEL_FS_250, mpu.MPU6050_GYRO_FS_250);
+	mpu.setClockSource(MPU6050_CLOCK_PLL_XGYRO);
+    setRangeSettings(0, 0);
     mpu.setSleepEnabled(false);
+}
+
+void MPU6050Wrapper::setProperOffsets(){
+	int16_t avg_ax = mpu.getAccelerationX();
+	int16_t avg_ay = mpu.getAccelerationY();
+	int16_t avg_az = mpu.getAccelerationZ();
+	
+	int16_t avg_gx = mpu.getRotationX();
+	int16_t avg_gy = mpu.getRotationY();
+	int16_t avg_gz = mpu.getRotationZ();
+	/*
+	int count = 0;
+	while( one second not passed (count = number of samples per second)){
+		average measurements for each sensor and its axis
+	}
+	*/
+	
+	
+	mpu.setXAccelOffset(avg_ax);
+    mpu.setYAccelOffset(avg_ay);
+    mpu.setZAccelOffset(avg_az);
+    mpu.setXGyroOffset (avg_gx);
+    mpu.setYGyroOffset (avg_gy);
+    mpu.setZGyroOffset (avg_gz);
 }
 
 bool MPU6050Wrapper::fullTest() {
@@ -35,19 +63,21 @@ bool MPU6050Wrapper::fullTest() {
 
 //loop
 void MPU6050Wrapper::refresh(float dt) {
-	VectorFloat temp[] = getSensorValues();
+	parseSensorValues();
 	
-	VectorFloat accel_sensor = temp[0];
-	VectorFloat gyro_sensor = temp[1];
+	VectorFloat accel(accel_sensor, accel_div);
+	VectorFloat gyro(gyro_sensor, gyro_div);
 	
 	//implementing complimentary filter
-	accel_sensor.mult(COMPLIMENTARY_ACCEL);
-	gyro_sensor.mult(COMPLIMENTARY_GYRO);
-	gyro_sensor.add(accel_sensor);
+	/*accel.mult(COMPLIMENTARY_ACCEL);
+	gyro.mult(COMPLIMENTARY_GYRO);
+	gyro.add(accel);
 	
-	gyro_sensor.mult(dt);
+	gyro.mult(dt);
 	
-	angle.add(gyro_sensor);
+	angle.add(gyro);*/
+	
+	angle = gyro;
 }
 
 float MPU6050Wrapper::getAngleX() {
@@ -63,19 +93,12 @@ float MPU6050Wrapper::getAngleZ() {
 }
 
 //temporary implementation. doesn't use FIFO
-VectorFloat* MPU6050Wrapper::getSensorValues(){
-	//sersor values
-	int ax, ay, az;
-	int gx, gy, gz;
+void MPU6050Wrapper::parseSensorValues(){
+	accel_sensor.x = mpu.getAccelerationX();
+	accel_sensor.y = mpu.getAccelerationY();
+	accel_sensor.z = mpu.getAccelerationZ();
 	
-	mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-	
-	VectorFloat accel((float)ax, (float)ay, (float)az);
-	accel.div(accel_div);
-	
-	VectorFloat gyro((float)gx, (float)gy, (float)gz);
-	gyro.div(gyro_div);
-	
-	VectorFloat res[] = {accel, gyro};
-	return res;
+	gyro_sensor.x = mpu.getRotationX();
+	gyro_sensor.y = mpu.getRotationY();
+	gyro_sensor.z = mpu.getRotationZ();
 }

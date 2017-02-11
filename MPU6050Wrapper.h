@@ -3,7 +3,7 @@
 #ifndef _MPU6050WRAPPER_H_
 #define _MPU6050WRAPPER_H_
 
-#include "./libs/MPU6050.h"
+#include "MPU6050.h"
 #include "./libs/helper_3dmath.h"
 
 
@@ -19,13 +19,16 @@ class MPU6050Wrapper {
 		float accel_div;
 		float gyro_div;
 		VectorFloat angle;
+		VectorInt16 accel_sensor, gyro_sensor;
 	
 	public:
         MPU6050Wrapper();
 		
+		void init();
 		//MPU6050 getMPUSensor();
 		
 		void setRangeSettings(int accel, int gyro);
+		
 		
 		bool fullTest();
 		
@@ -42,7 +45,13 @@ class MPU6050Wrapper {
 	private:
 		void setDefaultSettings();
 		
-		VectorInt16* getSensorValues();
+		void setProperOffsets();
+		
+		void parseSensorValues();
+		
+		int getFIFOEnabledSensors();
+		
+		
 	
 };
 #endif
