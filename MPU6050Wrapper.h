@@ -42,10 +42,17 @@ class MPU6050Wrapper {
 		
 		float getAngleZ();
 		
+		int getSampleRate();
+		
+		
 	private:
+		//settings configuration
 		void setDefaultSettings();
 		
 		void setProperOffsets();
+		
+		void setFIFOSettings();
+		//
 		
 		void parseSensorValues();
 		
