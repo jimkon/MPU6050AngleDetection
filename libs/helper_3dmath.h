@@ -213,6 +213,12 @@ class VectorFloat {
         }
 		
 		//added by jimkon
+		VectorFloat(VectorInt16 v, float div){
+			x = ((float)v.x)/div;
+			y = ((float)v.y)/div;
+			z = ((float)v.z)/div;
+		}
+		
 		void mult(float f){
 			x *= f;
 			y *= f;
