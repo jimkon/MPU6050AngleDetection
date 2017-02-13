@@ -22,20 +22,25 @@ class MPU6050Wrapper {
 		VectorInt16 accel_sensor, gyro_sensor;
 	
 	public:
+		const static bool X_ENABLED = true;
+		const static bool Y_ENABLED = true;
+		const static bool Z_ENABLED = true;
 		
+		bool x_enabled = true, y_enabled = true, z_enabled = true;
 		//
+		
+		MPU6050Wrapper();
 	
-        MPU6050Wrapper();
+        MPU6050Wrapper(bool x, bool y, bool z);
 		
 		void init();
 		//MPU6050 getMPUSensor();
 		
 		void setRangeSettings(int accel, int gyro);
 		
-		
 		bool fullTest();
 		
-		//bool quickTest();
+		bool quickTest();
 		
 		void refresh(float dt);
 		
@@ -45,8 +50,7 @@ class MPU6050Wrapper {
 		
 		float getAngleZ();
 		
-		int getSampleRate();
-		
+		int getMaxDT();
 		
 	private:
 		//settings configuration
@@ -56,11 +60,13 @@ class MPU6050Wrapper {
 		
 		void setFIFOSettings();
 		//
-		
 		void parseSensorValues();
 		
 		int getFIFOEnabledSensors();
 		
+		int getSampleRate();
+		
+		int getFIFOSampleSize();
 		
 	public:
 	//test function

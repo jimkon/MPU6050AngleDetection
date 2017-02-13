@@ -3,13 +3,15 @@
 
 
 //setup
-MPU6050Wrapper::MPU6050Wrapper() {
+MPU6050Wrapper::MPU6050Wrapper(){
 	
 }
 
-//MPU6050 MPU6050Wrapper::getMPUSensor(){
-//	return mpu;
-//}
+MPU6050Wrapper::MPU6050Wrapper(bool x, bool y, bool z) {
+	x_enabled = x;
+	y_enabled = y;
+	z_enabled = z;
+}
 
 void MPU6050Wrapper::init(){
 	setDefaultSettings();
@@ -17,6 +19,15 @@ void MPU6050Wrapper::init(){
 
 bool MPU6050Wrapper::fullTest() {
 	return mpu.testConnection();
+}
+
+bool MPU6050Wrapper::quickTest(){
+	/*
+	here we can make a quick check for:
+		.connections
+		.fifo enables (getFIFOEnabledSensors>5 || getFIFOEnabledSensors<2)
+	*/
+	return true;
 }
 
 //loop
@@ -122,9 +133,9 @@ void MPU6050Wrapper::setProperOffsets(){
 void MPU6050Wrapper::setFIFOSettings(){
 	mpu.setFIFOEnabled(true);
 	
-	mpu.setXGyroFIFOEnabled(true);
-	mpu.setYGyroFIFOEnabled(true);
-	mpu.setZGyroFIFOEnabled(true);
+	mpu.setXGyroFIFOEnabled(x_enabled);
+	mpu.setYGyroFIFOEnabled(y_enabled);
+	mpu.setZGyroFIFOEnabled(z_enabled);
 	mpu.setAccelFIFOEnabled(true);
 	mpu.setTempFIFOEnabled(false);
 	mpu.setSlave0FIFOEnabled(false);
@@ -154,7 +165,31 @@ int MPU6050Wrapper::getFIFOEnabledSensors(){
 	}
 	return mpu.getFIFOEnabled()?sum:0;
 }
+
+int MPU6050Wrapper::getFIFOSampleSize(){
+	int sum = 0;
+	if(	mpu.getXGyroFIFOEnabled() ){
+		sum ++;
+	}
+	if( mpu.getYGyroFIFOEnabled() ){
+		sum ++;
+	}
+	if( mpu.getZGyroFIFOEnabled() ){
+		sum ++;
+	}
+	sum += 3;		//for accel XYZ
+	sum *= 2; 	//2 bytes of data for each sample
+	
+	return sum;
+}
+
+int MPU6050Wrapper::getMaxDT(){
+	float period = 1000.0/getSampleRate();
+	float max_sample_number = 1024.0/getFIFOSampleSize();
+	return (int)(period*max_sample_number);
+}
+
 //test
 double MPU6050Wrapper::test(){
-	return getFIFOEnabledSensors()*10000+mpu.getFIFOCount();
+	return getMaxDT();
 }
