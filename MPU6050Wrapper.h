@@ -22,6 +22,9 @@ class MPU6050Wrapper {
 		VectorInt16 accel_sensor, gyro_sensor;
 	
 	public:
+		
+		//
+	
         MPU6050Wrapper();
 		
 		void init();
@@ -59,6 +62,8 @@ class MPU6050Wrapper {
 		int getFIFOEnabledSensors();
 		
 		
-	
+	public:
+	//test function
+		double test();
 };
 #endif

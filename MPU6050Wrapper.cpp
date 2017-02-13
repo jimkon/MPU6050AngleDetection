@@ -1,6 +1,7 @@
 
 #include "MPU6050Wrapper.h"
 
+
 //setup
 MPU6050Wrapper::MPU6050Wrapper() {
 	
@@ -55,7 +56,7 @@ int MPU6050Wrapper::getSampleRate(){
 		gyro_sample_rate *= 8;
 	}
 	float res = gyro_sample_rate/(1.0+(float)mpu.getRate());
-	return mpu.getFIFOCount();//(int)res;
+	return (int)res;
 }
 
 //temporary implementation. doesn't use FIFO
@@ -120,13 +121,40 @@ void MPU6050Wrapper::setProperOffsets(){
 
 void MPU6050Wrapper::setFIFOSettings(){
 	mpu.setFIFOEnabled(true);
-	mpu.setAccelFIFOEnabled(true);
 	
 	mpu.setXGyroFIFOEnabled(true);
 	mpu.setYGyroFIFOEnabled(true);
 	mpu.setZGyroFIFOEnabled(true);
-	
-	
+	mpu.setAccelFIFOEnabled(true);
+	mpu.setTempFIFOEnabled(false);
+	mpu.setSlave0FIFOEnabled(false);
+	mpu.setSlave1FIFOEnabled(false);
+	mpu.setSlave2FIFOEnabled(false);
+	mpu.setSlave3FIFOEnabled(false);
 	
 	mpu.resetFIFO();
+}
+
+int MPU6050Wrapper::getFIFOEnabledSensors(){
+	bool ens[9] = {	mpu.getTempFIFOEnabled(),
+					mpu.getXGyroFIFOEnabled(),
+					mpu.getYGyroFIFOEnabled(),
+					mpu.getZGyroFIFOEnabled(),
+					mpu.getAccelFIFOEnabled(),
+					mpu.getSlave3FIFOEnabled(),
+					mpu.getSlave2FIFOEnabled(),
+					mpu.getSlave1FIFOEnabled(),
+					mpu.getSlave0FIFOEnabled()};
+					
+	int sum = 0;
+	for(int i=0; i<9; i++){
+		if(ens[i]){
+			sum ++;
+		}
+	}
+	return mpu.getFIFOEnabled()?sum:0;
+}
+//test
+double MPU6050Wrapper::test(){
+	return getFIFOEnabledSensors()*10000+mpu.getFIFOCount();
 }
