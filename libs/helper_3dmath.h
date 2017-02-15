@@ -257,6 +257,9 @@ int ceil(float f){
 int round(float f){
 	return floor(f)+(f-floor(f)>0.5?1:0);
 }
+bool isInteger(float f){
+	return f==floor(f);
+}
 
 
 #endif /* _HELPER_3DMATH_H_ */
