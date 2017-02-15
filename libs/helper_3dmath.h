@@ -235,5 +235,28 @@ class VectorFloat {
 			z += vf.z;
 		}
 };
+//added by jimkon
+int min(int i1, int i2){
+	return i1<i2?i1:i2;
+}
+int max(int i1, int i2){
+	return i1>i2?i1:i2;
+}
+float min(float f1, float f2){
+	return f1<f2?f1:f2;
+}
+float max(float f1, float f2){
+	return f1>f2?f1:f2;
+}
+int floor(float f){
+	return (int)f;
+}
+int ceil(float f){
+	return floor(f)+(f>floor(f)?1:0);
+}
+int round(float f){
+	return floor(f)+(f-floor(f)>0.5?1:0);
+}
+
 
 #endif /* _HELPER_3DMATH_H_ */
