@@ -20,37 +20,62 @@ class MPU6050Wrapper {
 		float gyro_div;
 		VectorFloat angle;
 		VectorInt16 accel_sensor, gyro_sensor;
+		bool x_enabled = true, y_enabled = true, z_enabled = true;
 	
 	public:
-		const static bool X_ENABLED = true;
-		const static bool Y_ENABLED = true;
-		const static bool Z_ENABLED = true;
+		//------------------configuration------------------//
 		
-		bool x_enabled = true, y_enabled = true, z_enabled = true;
-		//
-		
+		//constructor with no parameters  
 		MPU6050Wrapper();
 	
+		//constructor with parameters specifying enables rotation axes
         MPU6050Wrapper(bool x, bool y, bool z);
 		
-		void init();
-		//MPU6050 getMPUSensor();
-		
+		//configuration of sensitivities
 		void setRangeSettings(int accel, int gyro);
 		
+		//setter and getter for sampling rate. 
+		//max rate = 8kHz, min rate = 3.9 Hz
+		/*
+			setSampleRate function will change the SMPL_DIV value to  
+			reach the closest value to rate parameter. If rate is greater 
+			than 1000, then DLPF mode will be set to zero. Else, DLPF mode
+			will not change.
+		*/
+		void setSampleRate(int rate);
+		int getSampleRate();
+		//------------------setup------------------//
+		//initialize the mpu6050 
+		void init();
+		
+		/*
+			make a full check for:
+				.connections
+				.FIFO enables (getFIFOEnabledSensors>5 || getFIFOEnabledSensors<2)
+				.proper offsets
+				.self tests
+		*/
 		bool fullTest();
 		
+		//get the maximum refresh time. This is the time that FIFO
+		//needs to fill. It is highly recommended time difference
+		//between refresh() calls not to exceed that time, in order
+		//not to lose samples
+		int getMaxDT();
+		
+		//------------------loop------------------//
+		//performs a quick test to ensure connection is ok
 		bool quickTest();
 		
+		//take new measurements from FIFO and calculate the current angle
+		//dt must be the time difference in ms from the previous call
 		void refresh(float dt);
 		
+		//get the current estimation of these values. 
+		//disables axes will return 0.0 or wrong values
 		float getAngleX();
-		
 		float getAngleY();
-		
 		float getAngleZ();
-		
-		int getMaxDT();
 		
 	private:
 		//settings configuration
@@ -60,11 +85,10 @@ class MPU6050Wrapper {
 		
 		void setFIFOSettings();
 		//
+		
 		void parseSensorValues();
 		
 		int getFIFOEnabledSensors();
-		
-		int getSampleRate();
 		
 		int getFIFOSampleSize();
 		

@@ -1,6 +1,12 @@
 
 #include "MPU6050Wrapper.h"
 
+/*
+	TODO:
+	test setSampleRate
+	test parseSensorValues
+	
+*/ 
 
 //setup
 MPU6050Wrapper::MPU6050Wrapper(){
@@ -22,11 +28,6 @@ bool MPU6050Wrapper::fullTest() {
 }
 
 bool MPU6050Wrapper::quickTest(){
-	/*
-	here we can make a quick check for:
-		.connections
-		.fifo enables (getFIFOEnabledSensors>5 || getFIFOEnabledSensors<2)
-	*/
 	return true;
 }
 
@@ -61,6 +62,18 @@ float MPU6050Wrapper::getAngleZ() {
 	return angle.z;
 }
 
+void MPU6050Wrapper::setSampleRate(int rate){
+	rate = min(8000, rate);
+	if(rate>1000){
+		mpu.setDLPFMode(0);
+	}
+	float gyro_sample_rate = 1000.0;
+	if(mpu.getDLPFMode() == 0 || mpu.getDLPFMode() == 7){
+		gyro_sample_rate *= 8;
+	}
+	int smpl_div = round((gyro_sample_rate/(float)rate)-1);
+	mpu.setRate(smpl_div);
+}
 int MPU6050Wrapper::getSampleRate(){
 	float gyro_sample_rate = 1000.0;
 	if(mpu.getDLPFMode() == 0 || mpu.getDLPFMode() == 7){
@@ -71,7 +84,7 @@ int MPU6050Wrapper::getSampleRate(){
 }
 
 //temporary implementation. doesn't use FIFO
-void MPU6050Wrapper::parseSensorValues(){
+/*void MPU6050Wrapper::parseSensorValues(){
 	accel_sensor.x = mpu.getAccelerationX();
 	accel_sensor.y = mpu.getAccelerationY();
 	accel_sensor.z = mpu.getAccelerationZ();
@@ -79,6 +92,60 @@ void MPU6050Wrapper::parseSensorValues(){
 	gyro_sensor.x = mpu.getRotationX();
 	gyro_sensor.y = mpu.getRotationY();
 	gyro_sensor.z = mpu.getRotationZ();
+}*/
+void MPU6050Wrapper::parseSensorValues(){
+	int size = mpu.getFIFOCount();
+	//checking if FIFO is empty
+	if(size == 0){
+		return;
+	}
+	
+	float samples = (float)size/(float)getFIFOSampleSize();
+	//checking if something is wrong with the sample size
+	if(!isInteger(samples){
+		//WARNING !!!
+		//samples can't be used.
+		return;
+	}
+	//read FIFO data in packets of 255 or less
+	uint8_t data[size];
+	int index = 0;
+	uint8_t packet;
+	do{
+		packet = (uint8_t)min(size, 255);
+		mpu.getFIFOBytes(&data[index], packet);
+		index += packet;
+	}while(index < size);
+	
+	//calculate position of each measurement in the sample
+	int ax_offset = 0;
+	int ay_offset = 2;
+	int az_offset = 4;
+	int gx_offset = x_enabled?6:4;
+	int gy_offset = gx_offset+(y_enabled?2:0);
+	int gz_offset = gy_offset+(z_enabled?2:0)
+	
+	//averaging values of each measurement
+	long ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
+	for(int i=0; i<size; i+=getFIFOSampleSize()){
+		ax += (((long)data[i+ax_offset]) << 8) | data[i+ax_offset+1];
+		ay += (((long)data[i+ay_offset]) << 8) | data[i+ay_offset+1];
+		az += (((long)data[i+az_offset]) << 8) | data[i+az_offset+1];
+		if(x_enabled)
+			gx += (((long)data[i+gx_offset]) << 8) | data[i+gx_offset+1];
+		if(y_enabled)
+			gy += (((long)data[i+gy_offset]) << 8) | data[i+gy_offset+1];
+		if(z_enabled)
+			gz += (((long)data[i+gz_offset]) << 8) | data[i+gz_offset+1];
+	}
+	
+	accel_sensor.x = (uint16_t)ax/samples;
+	accel_sensor.y = (uint16_t)ay/samples;
+	accel_sensor.z = (uint16_t)az/samples;
+	
+	gyro_sensor.x = (uint16_t)gx/samples;
+	gyro_sensor.y = (uint16_t)gy/samples;
+	gyro_sensor.z = (uint16_t)gz/samples;
 }
 
 //private 
@@ -178,7 +245,7 @@ int MPU6050Wrapper::getFIFOSampleSize(){
 		sum ++;
 	}
 	sum += 3;		//for accel XYZ
-	sum *= 2; 	//2 bytes of data for each sample
+	sum *= 2; 		//2 bytes of data for each sample
 	
 	return sum;
 }
