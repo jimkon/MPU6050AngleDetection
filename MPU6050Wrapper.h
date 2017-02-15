@@ -67,10 +67,13 @@ class MPU6050Wrapper {
 		//performs a quick test to ensure connection is ok
 		bool quickTest();
 		
+		//return true if there are data ready to parsed
+		bool readyData();
+		
 		//take new measurements from FIFO and calculate the current angle
 		//dt must be the time difference in ms from the previous call
-		void refresh(float dt);
-		
+		void refresh(unsigned long dt);
+				
 		//get the current estimation of these values. 
 		//disables axes will return 0.0 or wrong values
 		float getAngleX();

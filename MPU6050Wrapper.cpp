@@ -5,6 +5,8 @@
 	TODO:
 	test setSampleRate
 	test parseSensorValues
+	test readyData
+	debug
 	
 */ 
 
@@ -32,6 +34,10 @@ bool MPU6050Wrapper::quickTest(){
 }
 
 //loop
+int MPU6050Wrapper::readyData(){
+	return mpu.getFIFOCount()>0;
+}
+
 void MPU6050Wrapper::refresh(float dt) {
 	parseSensorValues();
 	
