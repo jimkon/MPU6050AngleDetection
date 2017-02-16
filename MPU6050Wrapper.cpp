@@ -6,6 +6,7 @@
 	test setSampleRate
 	test parseSensorValues
 	test readyData
+	implement setProperOffsets
 	debug
 	
 */ 
@@ -34,38 +35,46 @@ bool MPU6050Wrapper::quickTest(){
 }
 
 //loop
-int MPU6050Wrapper::readyData(){
+bool MPU6050Wrapper::readyData(){
 	return mpu.getFIFOCount()>0;
 }
 
-void MPU6050Wrapper::refresh(float dt) {
+void MPU6050Wrapper::refresh(unsigned long dt) {
 	parseSensorValues();
 	
 	VectorFloat accel(accel_sensor, accel_div);
 	VectorFloat gyro(gyro_sensor, gyro_div);
 	
 	//implementing complimentary filter
-	/*accel.mult(COMPLIMENTARY_ACCEL);
+	/*
+	accel.mult(COMPLIMENTARY_ACCEL);
 	gyro.mult(COMPLIMENTARY_GYRO);
 	gyro.add(accel);
 	
 	gyro.mult(dt);
 	
-	angle.add(gyro);*/
+	angle.add(gyro);
+	*/
 	
 	angle = gyro;
 }
 
 float MPU6050Wrapper::getAngleX() {
-	return angle.x;
+	if(x_enabled)
+		return angle.x;
+	return 0;
 }
 		
 float MPU6050Wrapper::getAngleY() {
-	return angle.y;
+	if(y_enabled)
+		return angle.y;
+	return 0;
 }
 		
 float MPU6050Wrapper::getAngleZ() {
-	return angle.z;
+	if(z_enabled)
+		return angle.z;
+	return 0;
 }
 
 void MPU6050Wrapper::setSampleRate(int rate){
@@ -80,13 +89,13 @@ void MPU6050Wrapper::setSampleRate(int rate){
 	int smpl_div = round((gyro_sample_rate/(float)rate)-1);
 	mpu.setRate(smpl_div);
 }
-int MPU6050Wrapper::getSampleRate(){
+float MPU6050Wrapper::getSampleRate(){
 	float gyro_sample_rate = 1000.0;
 	if(mpu.getDLPFMode() == 0 || mpu.getDLPFMode() == 7){
 		gyro_sample_rate *= 8;
 	}
 	float res = gyro_sample_rate/(1.0+(float)mpu.getRate());
-	return (int)res;
+	return res;
 }
 
 //temporary implementation. doesn't use FIFO
@@ -99,16 +108,18 @@ int MPU6050Wrapper::getSampleRate(){
 	gyro_sensor.y = mpu.getRotationY();
 	gyro_sensor.z = mpu.getRotationZ();
 }*/
+int tv = 0;
 void MPU6050Wrapper::parseSensorValues(){
+	tv = 0;
 	int size = mpu.getFIFOCount();
 	//checking if FIFO is empty
 	if(size == 0){
 		return;
 	}
 	
-	float samples = (float)size/(float)getFIFOSampleSize();
+	float samples = (float)size/(float)getFIFOSampleSize();// make this int
 	//checking if something is wrong with the sample size
-	if(!isInteger(samples){
+	if((int)samples-samples>0){
 		//WARNING !!!
 		//samples can't be used.
 		return;
@@ -116,9 +127,8 @@ void MPU6050Wrapper::parseSensorValues(){
 	//read FIFO data in packets of 255 or less
 	uint8_t data[size];
 	int index = 0;
-	uint8_t packet;
 	do{
-		packet = (uint8_t)min(size, 255);
+		uint8_t packet = (uint8_t)min(size, 255);
 		mpu.getFIFOBytes(&data[index], packet);
 		index += packet;
 	}while(index < size);
@@ -129,11 +139,12 @@ void MPU6050Wrapper::parseSensorValues(){
 	int az_offset = 4;
 	int gx_offset = x_enabled?6:4;
 	int gy_offset = gx_offset+(y_enabled?2:0);
-	int gz_offset = gy_offset+(z_enabled?2:0)
+	int gz_offset = gy_offset+(z_enabled?2:0);
 	
 	//averaging values of each measurement
 	long ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
 	for(int i=0; i<size; i+=getFIFOSampleSize()){
+		tv++;
 		ax += (((long)data[i+ax_offset]) << 8) | data[i+ax_offset+1];
 		ay += (((long)data[i+ay_offset]) << 8) | data[i+ay_offset+1];
 		az += (((long)data[i+az_offset]) << 8) | data[i+az_offset+1];
@@ -145,13 +156,14 @@ void MPU6050Wrapper::parseSensorValues(){
 			gz += (((long)data[i+gz_offset]) << 8) | data[i+gz_offset+1];
 	}
 	
-	accel_sensor.x = (uint16_t)ax/samples;
-	accel_sensor.y = (uint16_t)ay/samples;
-	accel_sensor.z = (uint16_t)az/samples;
+	accel_sensor.x = (uint16_t)ax / samples;
+	accel_sensor.y = (uint16_t)ay / samples;
+	accel_sensor.z = (uint16_t)az / samples;
 	
-	gyro_sensor.x = (uint16_t)gx/samples;
-	gyro_sensor.y = (uint16_t)gy/samples;
-	gyro_sensor.z = (uint16_t)gz/samples;
+	gyro_sensor.x = (uint16_t)gx / samples;
+	gyro_sensor.y = (uint16_t)gy / samples;
+	gyro_sensor.z = (uint16_t)gz / samples;
+	
 }
 
 //private 
@@ -160,11 +172,12 @@ void MPU6050Wrapper::setDefaultSettings() {
     setRangeSettings(0, 0);
 	mpu.setSleepEnabled(false);
 	
-	mpu.setDLPFMode(1);
-	mpu.setRate(99);
+	//mpu.setDLPFMode(1);
+	//mpu.setRate(99);
+	setSampleRate(60);
 	setFIFOSettings();
 	
-	setProperOffsets();
+	//setProperOffsets();
 }
 
 void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
@@ -264,5 +277,5 @@ int MPU6050Wrapper::getMaxDT(){
 
 //test
 double MPU6050Wrapper::test(){
-	return getMaxDT();
+	return tv;
 }

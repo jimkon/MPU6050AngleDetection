@@ -43,7 +43,7 @@ class MPU6050Wrapper {
 			will not change.
 		*/
 		void setSampleRate(int rate);
-		int getSampleRate();
+		float getSampleRate();
 		//------------------setup------------------//
 		//initialize the mpu6050 
 		void init();
