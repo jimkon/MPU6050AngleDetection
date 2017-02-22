@@ -108,7 +108,7 @@ float MPU6050Wrapper::getSampleRate(){
 	gyro_sensor.y = mpu.getRotationY();
 	gyro_sensor.z = mpu.getRotationZ();
 }*/
-int tv = 0;
+int16_t tv = 0;
 void MPU6050Wrapper::parseSensorValues(){
 	tv = 0;
 	int size = mpu.getFIFOCount();
@@ -144,7 +144,7 @@ void MPU6050Wrapper::parseSensorValues(){
 	//averaging values of each measurement
 	long ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
 	for(int i=0; i<size; i+=getFIFOSampleSize()){
-		tv++;
+		
 		ax += (((long)data[i+ax_offset]) << 8) | data[i+ax_offset+1];
 		ay += (((long)data[i+ay_offset]) << 8) | data[i+ay_offset+1];
 		az += (((long)data[i+az_offset]) << 8) | data[i+az_offset+1];
@@ -160,10 +160,11 @@ void MPU6050Wrapper::parseSensorValues(){
 	accel_sensor.y = (uint16_t)ay / samples;
 	accel_sensor.z = (uint16_t)az / samples;
 	
-	gyro_sensor.x = (uint16_t)gx / samples;
-	gyro_sensor.y = (uint16_t)gy / samples;
-	gyro_sensor.z = (uint16_t)gz / samples;
 	
+	gyro_sensor.x = (int16_t)gx / samples;
+	gyro_sensor.y = (int16_t)gy / samples;
+	gyro_sensor.z = (int16_t)gz / samples;
+	tv = gyro_sensor.x;
 }
 
 //private 
@@ -177,7 +178,7 @@ void MPU6050Wrapper::setDefaultSettings() {
 	setSampleRate(60);
 	setFIFOSettings();
 	
-	//setProperOffsets();
+	setProperOffsets();
 }
 
 void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
