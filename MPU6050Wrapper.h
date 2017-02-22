@@ -84,7 +84,7 @@ class MPU6050Wrapper {
 		//settings configuration
 		void setDefaultSettings();
 		
-		void setProperOffsets();
+		void setProperOffsets(int millis);
 		
 		void setFIFOSettings();
 		//
