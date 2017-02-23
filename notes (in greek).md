@@ -1,8 +1,8 @@
 
 ## Menu
 1. [Sensor](#sensor)
-..1. [Details](#details)
-..2. [Configuration](#configuration)
+  1. [Details](#details)
+  2. [Configuration](#configuration)
 
 ### Sensor
  
