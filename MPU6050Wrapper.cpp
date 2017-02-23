@@ -216,6 +216,9 @@ void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
 } */
 //averaging measurements for millis and set this value as offset
 void MPU6050Wrapper::setProperOffsets(int millis){
+	//reset fifo?????
+	//save the previous sample rate
+	int previous_sample_rate = getSampleRate();
 	//find the optimal sampling rate via search
 	int optimal_sampling_rate = 1000; //unknown
 	//setSampleRate(optimal_sampling_rate); // set this rate
@@ -257,6 +260,8 @@ void MPU6050Wrapper::setProperOffsets(int millis){
     mpu.setYGyroOffset ((int16_t)gy/div);
     mpu.setZGyroOffset ((int16_t)gz/div);
 	
+	//set the sample rate as before
+	setSampleRate(previous_sample_rate);
 }
 //use custom offsets calculated by IMU_Zero sketch
 /*
@@ -276,6 +281,14 @@ ZGyro		[16,17] --> [0,4]
     mpu.setYGyroOffset (64);
     mpu.setZGyroOffset (16);
 }*/
+void MPU6050Wrapper::resetOffsets(){
+	mpu.setXAccelOffset(0);
+    mpu.setYAccelOffset(0);
+    mpu.setZAccelOffset(0);
+    mpu.setXGyroOffset (0);
+    mpu.setYGyroOffset (0);
+    mpu.setZGyroOffset (0);
+}
 void MPU6050Wrapper::setFIFOSettings(){
 	mpu.setFIFOEnabled(true);
 	

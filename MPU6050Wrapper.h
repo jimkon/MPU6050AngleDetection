@@ -80,11 +80,15 @@ class MPU6050Wrapper {
 		float getAngleY();
 		float getAngleZ();
 		
+		void setProperOffsets(int millis);
+		
+		void resetOffsets();
+		
 	private:
 		//settings configuration
 		void setDefaultSettings();
 		
-		void setProperOffsets(int millis);
+		
 		
 		void setFIFOSettings();
 		//
