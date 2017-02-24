@@ -3,14 +3,11 @@
 
 /*
 	TODO:
-	test setSampleRate
-	test parseSensorValues
-	test readyData
 	implement setProperOffsets
 	debug
 	
 */ 
-
+int16_t tv = 0;
 //setup
 MPU6050Wrapper::MPU6050Wrapper(){
 	
@@ -22,8 +19,16 @@ MPU6050Wrapper::MPU6050Wrapper(bool x, bool y, bool z) {
 	z_enabled = z;
 }
 
-void MPU6050Wrapper::init(){
-	setDefaultSettings();
+void MPU6050Wrapper::init(int sample_rate, int millis_calibration){
+	mpu.setClockSource(MPU6050_CLOCK_PLL_XGYRO);
+    setRangeSettings(0, 0);
+	mpu.setSleepEnabled(false);
+	
+	//mpu.setDLPFMode(1);
+	setSampleRate(sample_rate);
+	setFIFOSettings();
+	
+	setProperOffsets(millis_calibration);
 }
 
 bool MPU6050Wrapper::fullTest() {
@@ -87,7 +92,10 @@ void MPU6050Wrapper::setSampleRate(int rate){
 		gyro_sample_rate *= 8;
 	}
 	int smpl_div = round((gyro_sample_rate/(float)rate)-1);
+	smpl_div = min(smpl_div, 255);
+	smpl_div = max(smpl_div, 0);
 	mpu.setRate(smpl_div);
+	tv = 1000/getSampleRate();
 }
 float MPU6050Wrapper::getSampleRate(){
 	float gyro_sample_rate = 1000.0;
@@ -108,7 +116,7 @@ float MPU6050Wrapper::getSampleRate(){
 	gyro_sensor.y = mpu.getRotationY();
 	gyro_sensor.z = mpu.getRotationZ();
 }*/
-int16_t tv = 0;
+
 void MPU6050Wrapper::parseSensorValues(){
 	int size = mpu.getFIFOCount();
 	//checking if FIFO is empty
@@ -166,18 +174,6 @@ void MPU6050Wrapper::parseSensorValues(){
 }
 
 //private 
-void MPU6050Wrapper::setDefaultSettings() {
-	mpu.setClockSource(MPU6050_CLOCK_PLL_XGYRO);
-    setRangeSettings(0, 0);
-	mpu.setSleepEnabled(false);
-	
-	//mpu.setDLPFMode(1);
-	//mpu.setRate(99);
-	setSampleRate(60);
-	setFIFOSettings();
-	
-	setProperOffsets(3500);
-}
 
 void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
 	accel %= 4;
@@ -190,32 +186,12 @@ void MPU6050Wrapper::setRangeSettings(int accel, int gyro){
 	gyro_div = GYRO_DIVIDERS[gyro];
 	
 }
-//take the last measurment and set it as offset
-/* void MPU6050Wrapper::setProperOffsets(){
-	int16_t avg_ax = mpu.getAccelerationX();
-	int16_t avg_ay = mpu.getAccelerationY();
-	int16_t avg_az = mpu.getAccelerationZ();
-	
-	int16_t avg_gx = mpu.getRotationX();
-	int16_t avg_gy = mpu.getRotationY();
-	int16_t avg_gz = mpu.getRotationZ();
-	/*
-	int count = 0;
-	while( one second not passed (count = number of samples per second)){
-		average measurements for each sensor and its axis
-	}
-	*
-	
-	
-	mpu.setXAccelOffset(avg_ax);
-    mpu.setYAccelOffset(avg_ay);
-    mpu.setZAccelOffset(avg_az);
-    mpu.setXGyroOffset (avg_gx);
-    mpu.setYGyroOffset (avg_gy);
-    mpu.setZGyroOffset (avg_gz);
-} */
+
 //averaging measurements for millis and set this value as offset
 void MPU6050Wrapper::setProperOffsets(int millis){
+	if(millis<=0){
+		return;
+	}
 	//reset fifo?????
 	//save the previous sample rate
 	int previous_sample_rate = getSampleRate();
@@ -237,7 +213,7 @@ void MPU6050Wrapper::setProperOffsets(int millis){
 	int div = 0;
 	long ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
 	while(count>0){ // take all the samples
-		while(getFIFOCount()<min(max_fifo_samples, count){
+		while(mpu.getFIFOCount()<min(max_fifo_samples, count)){
 			;//spin waiting for FIFO to obtain the data
 		}
 		parseSensorValues();
