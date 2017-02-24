@@ -7,8 +7,8 @@
 #include "./libs/helper_3dmath.h"
 
 
-const float ACCEL_DIVIDERS[] =	{16384.0, 8192.0,	4096.0,	2048.0};
-const float GYRO_DIVIDERS[] = {131,	65.5,	32.8,	16.4};
+const int ACCEL_DIVIDERS[] =	{16384, 8192,	4096,	2048};
+const int GYRO_DIVIDERS[] = {1310,	655,	328,	164};
 const float COMPLIMENTARY_ACCEL = 0.02;
 const float COMPLIMENTARY_GYRO = 0.98;
 
@@ -16,9 +16,9 @@ class MPU6050Wrapper {
 	
 	private:
 		MPU6050 mpu;
-		float accel_div;
-		float gyro_div;
-		VectorFloat angle;
+		int accel_div;
+		int gyro_div;
+		VectorLong angle;
 		VectorInt16 accel_sensor, gyro_sensor;
 		bool x_enabled = true, y_enabled = true, z_enabled = true;
 	
@@ -76,9 +76,9 @@ class MPU6050Wrapper {
 				
 		//get the current estimation of these values. 
 		//disables axes will return 0.0 or wrong values
-		float getAngleX();
-		float getAngleY();
-		float getAngleZ();
+		long getAngleX();
+		long getAngleY();
+		long getAngleZ();
 		
 		void setProperOffsets(int millis);
 		

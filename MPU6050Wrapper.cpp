@@ -46,9 +46,10 @@ bool MPU6050Wrapper::readyData(){
 
 void MPU6050Wrapper::refresh(unsigned long dt) {
 	parseSensorValues();
-	
-	VectorFloat accel(accel_sensor, accel_div);
-	VectorFloat gyro(gyro_sensor, gyro_div);
+	angle.reset();
+	tv = gyro_div;
+	//VectorFloat accel(accel_sensor, accel_div);
+	//VectorFloat gyro(gyro_sensor, gyro_div);
 	
 	//implementing complimentary filter
 	/*
@@ -61,22 +62,22 @@ void MPU6050Wrapper::refresh(unsigned long dt) {
 	angle.add(gyro);
 	*/
 	
-	angle = gyro;
+	angle.sum(gyro_sensor, 10000, gyro_div);
 }
 
-float MPU6050Wrapper::getAngleX() {
+long MPU6050Wrapper::getAngleX() {
 	if(x_enabled)
 		return angle.x;
 	return 0;
 }
 		
-float MPU6050Wrapper::getAngleY() {
+long MPU6050Wrapper::getAngleY() {
 	if(y_enabled)
 		return angle.y;
 	return 0;
 }
 		
-float MPU6050Wrapper::getAngleZ() {
+long MPU6050Wrapper::getAngleZ() {
 	if(z_enabled)
 		return angle.z;
 	return 0;
@@ -124,11 +125,12 @@ void MPU6050Wrapper::parseSensorValues(){
 		return;
 	}
 	
-	float samples = (float)size/(float)getFIFOSampleSize();// make this int
+	int  samples = size/getFIFOSampleSize();// make this int
 	//checking if something is wrong with the sample size
-	if((int)samples-samples>0){
+	if(size%getFIFOSampleSize()>0){
 		//WARNING !!!
 		//samples can't be used.
+		tv = -1;
 		return;
 	}
 	//read FIFO data in packets of 255 or less

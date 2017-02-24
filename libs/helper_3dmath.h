@@ -155,7 +155,28 @@ class VectorInt16 {
             return r;
         }
 };
-
+class VectorLong {
+	public:
+		long x;
+		long y;
+		long z;
+		
+		VectorLong(){
+			reset();
+		}
+		
+		void sum(VectorInt16 v, int f,int d){
+			x += ((long)v.x*f)/(long)d;
+			y += ((long)v.y*f)/(long)d;
+			z += ((long)v.z*f)/(long)d;
+		}
+		
+		void reset(){
+			x = 0L;
+			y = 0L;
+			z = 0L;
+		}
+};
 class VectorFloat {
     public:
         float x;
