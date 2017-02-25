@@ -47,7 +47,7 @@ bool MPU6050Wrapper::readyData(){
 void MPU6050Wrapper::refresh(unsigned long dt) {
 	parseSensorValues();
 	angle.reset();
-	tv = gyro_div;
+	
 	//VectorFloat accel(accel_sensor, accel_div);
 	//VectorFloat gyro(gyro_sensor, gyro_div);
 	
