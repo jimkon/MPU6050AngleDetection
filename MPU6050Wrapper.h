@@ -46,7 +46,7 @@ class MPU6050Wrapper {
 		float getSampleRate();
 		//------------------setup------------------//
 		//initialize the mpu6050 
-		void init(int sample_rate, int millis_calibration);
+		void init(int sample_rate);
 		
 		/*
 			make a full check for:
