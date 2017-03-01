@@ -198,34 +198,34 @@ void MPU6050Wrapper::setProperOffsets(int millis){
 	setSampleRate(optimal_sampling_rate); // set this rate
 	
 	//find the number of samples in millis
-	int samples = optimal_sampling_rate * ((float)millis/1000.0); //getSampleRate instead of optimal_sampling_rate
-	int total_samples = samples*2*getFIFOSampleSize();
-	
+	int samples = optimal_sampling_rate * ((float)millis/1000.0) *2*getFIFOSampleSize(); //getSampleRate instead of optimal_sampling_rate
+	if(samples==0){
+		return;
+	}
 	//find the number of packets
 	int max_fifo_samples = (1024 - 1024%getFIFOSampleSize());
 	
 	//wait for FIFO to get these samples
-	int count = total_samples;
 	int div = 0;
-	long ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
-	while(count>0){ // take all the samples
-		int bytes_waiting = min(max_fifo_samples, count);
+	//long ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
+	while(samples>0){ // take all the samples
+		int bytes_waiting = min(max_fifo_samples, samples);
 		while(mpu.getFIFOCount()<bytes_waiting){
 			;//spin waiting for FIFO to obtain the data
 		}
 		//parseSensorValues();
-		ax += accel_sensor.x;
-		ay += accel_sensor.y;
-		az += accel_sensor.z;
-		gx += gyro_sensor.x;
-		gy += gyro_sensor.y;
-		gz += gyro_sensor.z;
+		//ax += accel_sensor.x;
+		//ay += accel_sensor.y;
+		//az += accel_sensor.z;
+		//gx += gyro_sensor.x;
+		//gy += gyro_sensor.y;
+		//gz += gyro_sensor.z;
 		
 		div++;
 		tv = bytes_waiting;
-		count -= bytes_waiting;
+		samples -= bytes_waiting;
 	}
-	tv = count;
+	tv = samples;
 	//set the averages as offsets
 	/*mpu.setXAccelOffset((int16_t)ax/div);
     mpu.setYAccelOffset((int16_t)ay/div);

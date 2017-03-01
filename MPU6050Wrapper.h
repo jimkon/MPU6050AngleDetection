@@ -5,12 +5,13 @@
 
 #include "MPU6050.h"
 #include "./libs/helper_3dmath.h"
+#include <avr/pgmspace.h>
 
 
-const int ACCEL_DIVIDERS[] =	{16384, 8192,	4096,	2048};
-const int GYRO_DIVIDERS[] = {1310,	655,	328,	164};
-const float COMPLIMENTARY_ACCEL = 0.02;
-const float COMPLIMENTARY_GYRO = 0.98;
+const PROGMEM int ACCEL_DIVIDERS[]  =	{16384, 8192,	4096,	2048};
+const PROGMEM int GYRO_DIVIDERS[] = {1310,	655,	328,	164};
+const PROGMEM float COMPLIMENTARY_ACCEL = 0.02;
+const PROGMEM float COMPLIMENTARY_GYRO = 0.98;
 
 class MPU6050Wrapper {
 	
